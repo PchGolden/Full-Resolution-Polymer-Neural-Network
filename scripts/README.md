@@ -1,10 +1,7 @@
-# Executable scripts
+# Release maintenance
 
-- `verify_release.py`: row mappings, expected OOF coverage, pair counts and optional file checksum verification; no training.
-- `preprocess/`: wrappers for canonical BCDB/homopolymer and MD preprocessing, single-target homopolymer caches, and training-fold target normalization.
-- `evaluate/`: real MD checkpoint inference and the final 1,417-pair diagnostic reproduction.
-- `figures/`: BCDB/homopolymer plots from retained caches and MD predictive-behavior diagnostics.
-- `configs/`: original manuscript model settings and seed 42 in scheduler-job form; adjust cluster-specific paths if using those jobs directly.
-- `train/`: lightweight package-layout checks; model training is exposed through `python -m frpn.cli.train_bcdb`, `train_homopolymer` and `train_md`.
+- `python scripts/verify_release.py`: verify dataset mappings, OOF coverage and matched-pair counts. Add `--lammps-hashes` for all atomistic-input checksums. Zenodo verification options are described in the main README.
+- `python scripts/file_manifest.py`: verify every tracked release file against `docs/github_file_manifest.csv`.
+- `python scripts/file_manifest.py --write`: refresh that manifest after staging an intentional release change.
 
-`python -m frpn.cli.export_oof bcdb --help` and `python -m frpn.cli.export_oof md --help` expose actual checkpoint exporters. Complete commands are in `docs/reproduce_paper.md`.
+Training, preprocessing, export and analysis are directly executable modules under `frpn/`. Scheduler configurations are under `configs/slurm/`. See [reproduction commands](../docs/reproduce_paper.md).

@@ -4,19 +4,28 @@ Code and data for **Uni-Macro-FRPN: Full-Resolution and Cross-Scale Learning for
 
 FRPN connects learned monomer representations with an explicit polymer graph. The repository contains BCDB classification, linear homopolymer regression, and the 1,640-record MD benchmark.
 
-## Contents
+## Repository layout
 
-| Path | Contents |
-| --- | --- |
-| `frpn/pipelines/bcdb/` | BCDB and homopolymer model, preprocessing, training and evaluation |
-| `frpn/pipelines/md_final1640_v2/` | MD graph model, preprocessing, training and evaluation |
-| `data/raw/`, `data/splits/` | Benchmark CSVs and the manuscript's fixed folds |
-| `data/lammps/` | 1,640 final atomistic LAMMPS data files, coefficient/charge audit and row mapping |
-| `scripts/` | Executable reproduction, export, normalization and figure scripts |
-| `scripts/configs/` | Original run settings, including model variants and seed 42 |
-| `results/oof_predictions/` | Retained out-of-fold predictions for result reproduction |
-| `results/summaries/`, `results/diagnostics/` | Benchmark and predictive-behavior result tables |
-| `docs/checkpoint_manifest.csv` | Model, target, fold, file size and SHA-256 mapping for checkpoints |
+```text
+frpn/
+  common/              shared attention and molecular graph features
+  linear/              BCDB and homopolymer workflows
+    models/            monomer encoder, chain model and proportional rescaling
+    pretraining/       auxiliary BCDB unsupervised training and evaluation
+  md/                  explicit-graph MD workflow and target preparation
+    models/            MD monomer and polymer graph models
+  analysis/            plots, summaries and predictive-behavior diagnostics
+configs/slurm/         BCDB, homopolymer and MD job configurations
+data/                 raw benchmarks, fixed folds and LAMMPS inputs
+results/               retained OOF predictions, summaries and diagnostics
+docs/                  reproduction guide, asset manifests and source map
+scripts/               release verification and manifest maintenance
+tests/                 CPU regression and package integration checks
+```
+
+BCDB and homopolymers share the `linear` implementation because both construct chains from monomer identities and repeat counts. MD reads the graph supplied in each record and has its own model and data loader. Identical attention and molecular graph utilities live in `common`. Each workflow exposes `preprocess`, `train` and `export` modules without import-path wrappers.
+
+See the [source and entry-point map](docs/architecture.md) for dependencies and the [reproduction guide](docs/reproduce_paper.md) for complete commands. Existing data, results and extracted checkpoint paths are retained.
 
 Checkpoints and larger processed/embedding caches are prepared separately for Zenodo. In the local publication bundle they are under `../zenodo/`. The Zenodo record has not yet been published; its download link will be added here after deposit. See [asset layout](docs/checkpoint_download.md).
 
@@ -28,12 +37,14 @@ Run commands from this repository root. The supplied environment specifies Pytho
 python -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements.txt
+python -m pip install --no-deps -e .
 python scripts/verify_release.py
+python scripts/file_manifest.py
 python -m unittest discover -s tests -v
-python -m frpn.cli.train_bcdb --help
-python -m frpn.cli.train_md --help
-python -m frpn.cli.export_oof bcdb --help
-python -m frpn.cli.export_oof md --help
+python -m frpn.linear.train --help
+python -m frpn.md.train --help
+python -m frpn.linear.export --help
+python -m frpn.md.export --help
 ```
 
 `environment.yml` supplies an alternative CPU environment for preprocessing, diagnostics and CPU evaluation. Training uses CUDA; use a CUDA-enabled PyTorch installation and GPU host for the training commands below. Check it with `python -c "import torch; print(torch.cuda.is_available())"`.
@@ -52,7 +63,7 @@ The full commands for preprocessing all three datasets, training model variants 
 
 ```bash
 mkdir -p reproduced/targets
-python scripts/preprocess/normalize_targets.py \
+python -m frpn.md.normalize_targets \
   --input data/splits/md_final1640_v2/with_fold.csv --fold 0 \
   --output reproduced/targets/fold0.csv \
   --parameters reproduced/targets/fold0_normalization.json
@@ -61,7 +72,7 @@ python scripts/preprocess/normalize_targets.py \
 To reproduce the revised 1,417 structure-control pairs and their metrics from the retained predictions:
 
 ```bash
-python scripts/evaluate/reproduce_structure_pairs.py \
+python -m frpn.analysis.structure_pairs \
   --output reproduced/structure_pairs
 ```
 
@@ -72,3 +83,5 @@ The released BCDB/homopolymer linear-chain allocator rescales requested monomer 
 `data/lammps/dataset_record_mapping.csv` links the one-based `dataset_record` and zero-based `dataset_row` to each final data file. MD polymer graph fields and target processing are described in [data/README.md](data/README.md).
 
 See [Code and data availability](docs/code_data_availability.md) and [third-party baselines](docs/third_party_baselines.md).
+
+The [reorganization validation record](docs/reorganization.md) documents the checks against the initial release.

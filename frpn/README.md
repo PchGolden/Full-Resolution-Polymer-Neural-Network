@@ -1,12 +1,10 @@
-# FRPN source package
+# FRPN Python package
 
-`pipelines/bcdb/` implements BCDB classification and homopolymer regression. `pipelines/md_final1640_v2/` implements the MD benchmark with explicit input graphs. CLI wrappers place the chosen pipeline on Python's import path.
+- `linear/`: BCDB classification and linear homopolymer regression. `preprocess.py`, `train.py` and `export.py` are the workflow entry points. `prepare_targets.py` produces the six homopolymer target caches.
+- `md/`: explicit-graph MD preprocessing, training, checkpoint export, target transforms and fold preparation.
+- `common/`: shared attention and molecular graph primitives.
+- `analysis/`: plots, summaries, matched pairs and residual diagnostics. These modules read retained outputs or exported checkpoint predictions.
 
-- `python -m frpn.cli.train_bcdb --help`
-- `python -m frpn.cli.train_homopolymer --help`
-- `python -m frpn.cli.train_md --help`
-- `python -m frpn.cli.export_oof bcdb --help`
-- `python -m frpn.cli.export_oof md --help`
-- `python -m frpn.cli.make_figures --help`
+Run entry points as modules, for example `python -m frpn.linear.train --help` or `python -m frpn.md.export --help`. Both model families can be imported in the same Python process.
 
-BCDB/homopolymer linear chains use composition-preserving proportional rescaling at the token budget. MD uses the graph fields supplied by the dataset. See the repository README for runnable commands and `docs/reproduce_paper.md` for model-specific settings.
+The [source map](../docs/architecture.md) explains dependencies and auxiliary utilities. The [reproduction guide](../docs/reproduce_paper.md) provides end-to-end commands.

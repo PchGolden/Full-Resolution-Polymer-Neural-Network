@@ -8,7 +8,7 @@
 
 The MD CSV specifies chemistry with `SMILES0`–`SMILES7` and monomer counts with `seg0_feat0`–`seg7_feat0`. `chain_node_seg_id`, `chain_node_types` and `chain_edges` define the model graph; `topology` and `mix_mode` record topology and sequence ordering. `glob_feat0` records temperature. The public preprocessor reads these graph fields directly.
 
-MD labels are density, Rg, D, S_q_peak, nematic_order, dielectric_constant and refractive_index. `scripts/preprocess/normalize_targets.py` applies log10(max(D, 1e-16)) and then training-fold standardization. It also implements the inverse transform. The corresponding transformations are integrated into the training and checkpoint-export pipelines.
+MD labels are density, Rg, D, S_q_peak, nematic_order, dielectric_constant and refractive_index. `frpn/md/normalize_targets.py` applies log10(max(D, 1e-16)) and then training-fold standardization. It also implements the inverse transform. The corresponding transformations are integrated into the training and checkpoint-export pipelines.
 
 Raw graph specifications, final atomistic files and labels are provided. The general force-field assignment system and complete trajectory-production service are developed separately; the target-processing script operates on the provided labels.
 

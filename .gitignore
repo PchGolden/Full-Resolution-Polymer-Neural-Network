@@ -8,3 +8,11 @@ results/retrained*/
 checkpoints/
 *.pt
 *.pth
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+sbatch/sbatch_log/
+slurm-*.out
+.env
+.env.*

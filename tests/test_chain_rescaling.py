@@ -2,25 +2,17 @@
 
 Run from the GitHub package root:
     python -m unittest discover -s tests -p 'test_chain_rescaling.py' -v
-Set FRPN_PIPELINE_ROOT to test the working pipeline instead of the release copy.
 """
-from pathlib import Path
 from types import SimpleNamespace
 import itertools
-import os
-import sys
 import unittest
 
 import torch
 
-DEFAULT_ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_PIPELINE = DEFAULT_ROOT if (DEFAULT_ROOT / 'models').is_dir() else DEFAULT_ROOT / 'frpn/pipelines/bcdb'
-PIPELINE = Path(os.environ.get('FRPN_PIPELINE_ROOT', DEFAULT_PIPELINE))
 torch.set_num_threads(1)
-sys.path.insert(0, str(PIPELINE))
-from models.chain_rescaling import rescale_repeat_counts
-from models.utils_insym import ChainTokenFeaturePlus, ChainEdgeFeaturePlus
-from models.multi_mol_model import MultiMolModel
+from frpn.linear.models.chain_rescaling import rescale_repeat_counts
+from frpn.linear.models.features import ChainTokenFeaturePlus, ChainEdgeFeaturePlus
+from frpn.linear.models.model import MultiMolModel
 
 
 def token_inputs(counts, blocks=None, dim=4):
