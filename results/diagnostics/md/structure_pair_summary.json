@@ -1,0 +1,76 @@
+{
+  "protocol": {
+    "chemistry_overlap_minimum": 0.95,
+    "temperature": "exactly matched",
+    "chain_length": "exactly matched",
+    "structural_difference": "topology or sequence ordering differs",
+    "not_controlled": [
+      "chem_profile_id",
+      "rigid_ratio",
+      "polar_ratio"
+    ]
+  },
+  "n_pairs": 1417,
+  "unique_samples": 743,
+  "maximum_pairs_per_sample": 16,
+  "mean_corr_delta_by_model": {
+    "FRPN": 0.08135521500378144,
+    "FRPN_FP": 0.01173649548013228,
+    "Stage2_Only": 0.0068557480279304505,
+    "Uni_Macro": -0.017666030075534706
+  },
+  "per_label_comparison": {
+    "density": {
+      "FRPN_corr_delta": -0.17079174204507064,
+      "Uni_Macro_corr_delta": -0.2832973786296408,
+      "Stage2_Only_corr_delta": -0.09421206410738127,
+      "FRPN_minus_best_control": -0.07657967793768937,
+      "FRPN_best_among_FRPN_and_two_controls": false
+    },
+    "Rg": {
+      "FRPN_corr_delta": 0.4642465217595428,
+      "Uni_Macro_corr_delta": 0.42538671102126596,
+      "Stage2_Only_corr_delta": 0.38354386936645835,
+      "FRPN_minus_best_control": 0.03885981073827682,
+      "FRPN_best_among_FRPN_and_two_controls": true
+    },
+    "D": {
+      "FRPN_corr_delta": -0.07905572338316036,
+      "Uni_Macro_corr_delta": -0.06952201563220714,
+      "Stage2_Only_corr_delta": -0.10341985542451594,
+      "FRPN_minus_best_control": -0.009533707750953219,
+      "FRPN_best_among_FRPN_and_two_controls": false
+    },
+    "S_q_peak": {
+      "FRPN_corr_delta": -0.027315341553768455,
+      "Uni_Macro_corr_delta": -0.02878542021129301,
+      "Stage2_Only_corr_delta": -0.23000730464917962,
+      "FRPN_minus_best_control": 0.0014700786575245553,
+      "FRPN_best_among_FRPN_and_two_controls": true
+    },
+    "nematic_order": {
+      "FRPN_corr_delta": 0.07340322354793953,
+      "Uni_Macro_corr_delta": -0.1361441454027252,
+      "Stage2_Only_corr_delta": -0.17319508935666153,
+      "FRPN_minus_best_control": 0.20954736895066473,
+      "FRPN_best_among_FRPN_and_two_controls": true
+    },
+    "dielectric_constant": {
+      "FRPN_corr_delta": 0.11587457821420659,
+      "Uni_Macro_corr_delta": 0.13679811928087052,
+      "Stage2_Only_corr_delta": 0.05788710619917514,
+      "FRPN_minus_best_control": -0.020923541066663928,
+      "FRPN_best_among_FRPN_and_two_controls": false
+    },
+    "refractive_index": {
+      "FRPN_corr_delta": 0.1931249884867807,
+      "Uni_Macro_corr_delta": -0.16809808095501327,
+      "Stage2_Only_corr_delta": 0.207393574167618,
+      "FRPN_minus_best_control": -0.014268585680837303,
+      "FRPN_best_among_FRPN_and_two_controls": false
+    }
+  },
+  "frpn_best_label_count_among_frpn_and_two_controls": 3,
+  "additive_null_and_stacking_recomputed": false,
+  "reason_additive_null_and_stacking_unchanged": "These analyses use all OOF records and do not consume the matched-pair set."
+}

@@ -1,0 +1,11 @@
+kind,pattern,branch,hit_stage,hit_rank,lineno,type_id,params_json,raw,comment,boss_choice_type_id,boss_choice_params_json
+dihedral,CT-CT-CT-CT,A3,exact,1,4751,3,"{""v1"":0.85,""v2"":-0.2,""v3"":0.2,""v4"":0.0}",003   0.850    -0.200     0.200     0.0        CT-CT-CT-CT     hydrocarbon OPLS/2020,hydrocarbon OPLS/2020,,"{""v1"":0.85,""v2"":-0.2,""v3"":0.2,""v4"":0.0}"
+dihedral,C-CT-CT-CA,A3,exact,1,5026,116,"{""v1"":-1.697,""v2"":-0.456,""v3"":0.585,""v4"":0.0}",116  -1.697    -0.456     0.585     0.0        CA-CT-CT-C      aldehyde & ketone & acyl halide,,,"{""v1"":-1.697,""v2"":-0.456,""v3"":0.585,""v4"":0.0}"
+angle,CT-SY-OY,A3,exact,1,1682,,"{""k"":74.0,""x0"":108.9}",OY-SY-CT    74.0      108.9,,,"{""k"":74.0,""x0"":108.9}"
+bond,CP-SA,A3,exact,1,328,,"{""k"":250.0,""x0"":1.74}",CP-SA 250.       1.74         wlj,250. 1.74 wlj,,"{""k"":250.0,""x0"":1.74}"
+dihedral,C-CT-CT-C,A3,exact,1,4999,101,"{""v1"":-0.55,""v2"":0.0,""v3"":1.0,""v4"":0.0}",101  -0.550     0.000     1.000     0.0        C -CT-CT-C      dicarboxylic acid,,,"{""v1"":-0.55,""v2"":0.0,""v3"":1.0,""v4"":0.0}"
+dihedral,CT-CT-CT-N,A3,exact,2,4948,65,"{""v1"":1.964,""v2"":0.0,""v3"":0.659,""v4"":0.0}",065   1.964     0.000     0.659     0.0        N -CT-CT-CT     N-propylformamide,,,"{""v1"":1.572,""v2"":0.159,""v3"":0.2,""v4"":0.0}"
+dihedral,C-N-CT-CT,A3,exact,2,4945,62,"{""v1"":-1.396,""v2"":-0.427,""v3"":0.0,""v4"":0.0}",062  -1.396    -0.427     0.000     0.0        C -N -CT-CT     N-ethylformamide,,,"{""v1"":-0.682,""v2"":0.13,""v3"":0.338,""v4"":0.0}"
+dihedral,C-N-CT-HC,A3,exact,2,4942,60,"{""v1"":0.0,""v2"":0.0,""v3"":-0.139,""v4"":0.0}",060   0.000     0.000    -0.139     0.0        C -N -CT-HC     N-methylformamide,,,"{""v1"":0.0,""v2"":0.0,""v3"":0.0,""v4"":0.0}"
+dihedral,CT-CT-C-N,A3,exact,2,4959,68,"{""v1"":2.844,""v2"":-0.361,""v3"":-0.325,""v4"":0.0}",068   2.844    -0.361    -0.325     0.0        CT-CT-C -N      propanamide OPLS-AA/M,,,"{""v1"":1.779,""v2"":0.419,""v3"":-0.11,""v4"":0.0}"
+dihedral,HC-CT-CT-SY,A3,exact,2,5592,239,"{""v1"":0.0,""v2"":0.0,""v3"":0.35,""v4"":0.0}",239   0.0       0.0       0.3500    0.0        HC-CT-CT-SY     sulfone,sulfone,,"{""v1"":0.0,""v2"":0.0,""v3"":0.452,""v4"":0.0}"

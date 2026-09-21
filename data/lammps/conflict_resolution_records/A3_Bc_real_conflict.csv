@@ -1,0 +1,14 @@
+﻿kind,pattern,raw,
+dihedral,CT-OS-C-O,182   0.000     5.124     0.0000    0.0        O -C -OS-CT     esters,R-COO-R
+dihedral,CT-OS-C-O,210   0.000     5.000     0.00      0.0        O -C -OS-CT     benzoic esters,
+dihedral,CT-CT-C-O,069   0.406     1.304     0.139     0.0        CT-CT-C -O      propanamide OPLS-AA/M,酰胺
+dihedral,CT-CT-C-O,095   0.000     0.546     0.000     0.0        CT-CT-C -O      RCOOH acid,羧基
+dihedral,CT-CT-C-O,105  -0.750    -0.550    -0.250     0.0        CT-CT-C -O      dicarboxylic acid,双羧基
+dihedral,CT-CT-C-O,114  -0.277     1.228    -0.694     0.0        CT-CT-C -O      aldehyde & ketone & acyl halide,羰基
+dihedral,C-CT-CT-HC,070   0.000     0.000    -0.100     0.0        HC-CT-CT-C      all carbonyls,羰基
+dihedral,C-CT-CT-HC,104   0.0       0.0       0.074     0.0        C -CT-CT-HC     dicarboxylic acid,双羧基
+dihedral,C-CT-CT-CT,071  -2.060    -0.313     0.315     0.0        C -CT-CT-CT     butanamide,酰胺
+dihedral,C-CT-CT-CT,116  -1.697    -0.456     0.585     0.0        CT-CT-CT-C      aldehyde & ketone & acyl halide,羰基
+dihedral,C-CT-CT-CT,467  -4.16     -0.76      0.96      0.16       C -CT-CT-CT     alkyl_hydantoin,芳香N
+angle,OY-SY-OY,OY-SY-OY   104.0      123.0      wlj 9/19 from MeSO2F,S-F
+angle,OY-SY-OY,OY-SY-OY   104.0      119.0,

@@ -1,0 +1,25 @@
+{
+  "global_dir": "archived_workflow/workflow_chem_v1/boss_FFassign_self/part2_param_lookup/runs/run_1241198/merged/phase8_apply_out/global",
+  "out_dir": "archived_workflow/workflow_chem_v1/boss_FFassign_self/part2_param_lookup/runs/run_1241198/merged/review_inputs",
+  "pattern_candidates_rows": 59,
+  "unique_conflict_patterns": 15,
+  "instance_rows": 98971,
+  "candidates_by_kind": {
+    "dihedral": 52,
+    "angle": 5,
+    "bond": 2
+  },
+  "candidates_by_branch": {
+    "A3": 59
+  },
+  "instances_by_kind": {
+    "dihedral": 83808,
+    "angle": 12770,
+    "bond": 2393
+  },
+  "instances_by_branch": {
+    "A3": 98971
+  },
+  "patterns_tsv": "archived_workflow/workflow_chem_v1/boss_FFassign_self/part2_param_lookup/runs/run_1241198/merged/review_inputs/A3_Bc_conflict_patterns.tsv",
+  "instances_tsv": "archived_workflow/workflow_chem_v1/boss_FFassign_self/part2_param_lookup/runs/run_1241198/merged/review_inputs/A3_Bc_conflict_instances.tsv"
+}

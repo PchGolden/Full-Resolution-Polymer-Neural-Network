@@ -1,0 +1,5 @@
+control,model,mean_corr_delta,mean_mae_delta,mean_sign_acc,total_pairs
+chemistry_matched_structure_variation,FRPN,0.08135521500378144,0.5601929639498598,0.5514111364928995,9919
+chemistry_matched_structure_variation,FRPN_FP,0.01173649548013228,0.5779514619944415,0.4972021845423571,9919
+chemistry_matched_structure_variation,Stage2_Only,0.0068557480279304505,0.5911647664226761,0.4745422595346916,9919
+chemistry_matched_structure_variation,Uni_Macro,-0.017666030075534706,0.5813070337452367,0.4513407675793743,9919

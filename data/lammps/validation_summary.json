@@ -1,0 +1,82 @@
+{
+  "manifest_rows": 1640,
+  "archive_data_files": 1640,
+  "files_with_complete_embedded_coefficients": 1640,
+  "coefficient_coverage_issues": [],
+  "documented_conflict_pattern_count": 15,
+  "documented_conflict_patterns": [
+    {
+      "kind": "angle",
+      "pattern": "CT-SY-OY"
+    },
+    {
+      "kind": "angle",
+      "pattern": "OY-SY-OY"
+    },
+    {
+      "kind": "bond",
+      "pattern": "CP-SA"
+    },
+    {
+      "kind": "dihedral",
+      "pattern": "C-CT-CT-C"
+    },
+    {
+      "kind": "dihedral",
+      "pattern": "C-CT-CT-CA"
+    },
+    {
+      "kind": "dihedral",
+      "pattern": "C-CT-CT-CT"
+    },
+    {
+      "kind": "dihedral",
+      "pattern": "C-CT-CT-HC"
+    },
+    {
+      "kind": "dihedral",
+      "pattern": "C-N-CT-CT"
+    },
+    {
+      "kind": "dihedral",
+      "pattern": "C-N-CT-HC"
+    },
+    {
+      "kind": "dihedral",
+      "pattern": "CT-CT-C-N"
+    },
+    {
+      "kind": "dihedral",
+      "pattern": "CT-CT-C-O"
+    },
+    {
+      "kind": "dihedral",
+      "pattern": "CT-CT-CT-CT"
+    },
+    {
+      "kind": "dihedral",
+      "pattern": "CT-CT-CT-N"
+    },
+    {
+      "kind": "dihedral",
+      "pattern": "CT-OS-C-O"
+    },
+    {
+      "kind": "dihedral",
+      "pattern": "HC-CT-CT-SY"
+    }
+  ],
+  "conflict_pattern_files": [
+    "archived_workflow/workflow_chem_v1/boss_FFassign_self/part2_param_lookup/runs/run_1241198/merged/review_inputs/A3_Bc_conflict_patterns.tsv",
+    "archived_workflow/workflow_chem_v1/boss_FFassign_self/part2_param_lookup/runs/run_1241198/shard_00/review_inputs/A3_Bc_conflict_patterns.tsv",
+    "archived_workflow/workflow_chem_v1/boss_FFassign_self/part2_param_lookup/runs/run_1241198/shard_01/review_inputs/A3_Bc_conflict_patterns.tsv",
+    "archived_workflow/workflow_chem_v1/boss_FFassign_self/part2_param_lookup/runs/run_1241198/shard_02/review_inputs/A3_Bc_conflict_patterns.tsv",
+    "archived_workflow/workflow_chem_v1/boss_FFassign_self/part2_param_lookup/runs/run_1241198/shard_03/review_inputs/A3_Bc_conflict_patterns.tsv",
+    "archived_workflow/workflow_chem_v1/boss_FFassign_self/part2_param_lookup/runs/run_1241198/shard_04/review_inputs/A3_Bc_conflict_patterns.tsv",
+    "archived_workflow/workflow_chem_v1/boss_FFassign_self/part2_param_lookup/runs/run_1241198/shard_05/review_inputs/A3_Bc_conflict_patterns.tsv",
+    "archived_workflow/workflow_chem_v1/boss_FFassign_self/part2_param_lookup/runs/run_1241198/shard_06/review_inputs/A3_Bc_conflict_patterns.tsv",
+    "archived_workflow/workflow_chem_v1/boss_FFassign_self/part2_param_lookup/runs/run_1241198/shard_07/review_inputs/A3_Bc_conflict_patterns.tsv",
+    "archived_workflow/workflow_chem_v1/boss_FFassign_self/part2_param_lookup/runs/run_1241198/shard_08/review_inputs/A3_Bc_conflict_patterns.tsv",
+    "archived_workflow/workflow_chem_v1/boss_FFassign_self/part2_param_lookup/runs/run_1241198/shard_09/review_inputs/A3_Bc_conflict_patterns.tsv"
+  ]
+}

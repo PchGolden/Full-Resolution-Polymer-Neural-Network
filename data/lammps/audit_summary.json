@@ -1,0 +1,18 @@
+{
+  "final_dataset_rows": 1640,
+  "matched_and_archived": 1640,
+  "errors": [],
+  "domain_counts": {
+    "300K_prod400": 378,
+    "300K_orthogonal800": 728,
+    "600K_legacy": 534
+  },
+  "unique_source_files": 1640,
+  "charge_audit": {
+    "files_parsed": 1640,
+    "max_abs_net_charge_e": 3.940000016300349e-06,
+    "min_atom_charge_e": -3.143244,
+    "max_atom_charge_e": 4.124479,
+    "total_atoms_across_files": 1334923
+  }
+}

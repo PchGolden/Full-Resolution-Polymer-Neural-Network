@@ -1,0 +1,12 @@
+cff-version: 1.2.0
+title: "Uni-Macro-FRPN: Full-Resolution and Cross-Scale Learning for Polymers"
+message: "Please cite the associated FRPN manuscript when using this code or dataset."
+type: software
+authors:
+  - family-names: Wu
+    given-names: Jintao
+  - family-names: Shan
+    given-names: Yiran
+  - family-names: Zhang
+    given-names: Rui
+version: "0.2.0-publication-prep"

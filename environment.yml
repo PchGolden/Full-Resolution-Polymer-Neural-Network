@@ -1,0 +1,17 @@
+name: frpn
+channels:
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pip
+  - numpy=1.26.4
+  - pandas
+  - scikit-learn=1.6.1
+  - scipy
+  - matplotlib
+  - seaborn
+  - tqdm
+  - msgpack-python
+  - python-lmdb
+  - rdkit
+  - pytorch-cpu=2.5.0
