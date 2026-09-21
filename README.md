@@ -1,6 +1,6 @@
 # Uni-Macro-FRPN
 
-**Note that, the codes of this version of FRPN published on Github has been sigfinicantly optimized for readability. We have verified that the behavior of the model remain unchanged. Contact me if you would like use original version for reference.
+**Note that, the codes of this version of FRPN published on Github has been sigfinicantly optimized for readability. We have verified that the behavior of the model remain unchanged. Contact me if you would like use original version for reference.**
 
 Code and data for **Uni-Macro-FRPN: Full-Resolution and Cross-Scale Learning for Polymers** by Jintao Wu, Yiran Shan and Rui Zhang.
 
