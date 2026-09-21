@@ -1,23 +1,25 @@
+"""FRPN models for MD records with an explicit polymer graph."""
 import torch
 import torch.nn as nn
 from .features import (
     AtomFeaturePlus,
     EdgeFeaturePlus,
     SE3InvariantKernel,
-    _build_attn_mask,
     MovementPredictionHead,
     MaskLMHead,
-    build_padding_only_attn_mask,
     ChainTokenFeaturePlus,
     ChainEdgeFeaturePlus
 )
-from .encoder import EncoderBlock
+from frpn.common.encoder import EncoderBlock
+from frpn.common.modeling import MonomerEncodingMixin
 
 
-class MultiMolModel(nn.Module):
+class MultiMolModel(MonomerEncodingMixin, nn.Module):
+    """Encode monomers and the supplied polymer graph, with branch ablations."""
+
     def __init__(self, args):
         super().__init__()
-        self.args = args  # keep reference �C other modules rely on it
+        self.args = args  # Shared configuration, also serialized in checkpoints.
         self._fp_table_built = False
 
         # --------------------------------------------------------------
@@ -34,7 +36,7 @@ class MultiMolModel(nn.Module):
             hidden_dim=d_model,
             wo_node=getattr(args, "wo_node", False),
             wo_atom_feat=getattr(args, "wo_atom_feat", None)
-            
+
         )
 
         # Keep pair representation width consistent across all stage-1 modules.
@@ -47,7 +49,7 @@ class MultiMolModel(nn.Module):
             num_edge=getattr(args, "num_edge", 64),
             num_spatial=getattr(args, "num_spatial", 512),
             wo_spd=getattr(args, "wo_spd", False),
-            wo_edge=getattr(args, "wo_edge", False),            
+            wo_edge=getattr(args, "wo_edge", False),
         )
 
         # --------------------------------------------------------------
@@ -79,12 +81,12 @@ class MultiMolModel(nn.Module):
             start=getattr(args, "gaussian_mean_start", 0.0),
             stop=getattr(args, "gaussian_mean_stop", 9.0),
         )
-        
-        
+
+
         # --------------------------------------------------------------
         # Stage-2: chain-level modules
-        # --------------------------------------------------------------    
-        
+        # --------------------------------------------------------------
+
         self.chain_token_feature = ChainTokenFeaturePlus(
             embed_dim=d_model,
             num_glob_feat=args.num_chain_glob_feat,    # e.g. temperature, coexistence
@@ -105,14 +107,14 @@ class MultiMolModel(nn.Module):
             nn.Linear(d_model, d_model),
         )
         self.register_buffer("fp_table", torch.empty(0), persistent=True)
-        
+
         # ---- chain-level edge / pair bias ----
         self.chain_edge_feature = ChainEdgeFeaturePlus(
-            pair_dim=args.chain_pair_dim,       
-            max_chain_dist=args.max_chain_dist,  
+            pair_dim=args.chain_pair_dim,
+            max_chain_dist=args.max_chain_dist,
         )
 
-    
+
         self.chain_encoder = EncoderBlock(
             num_encoder_layers=getattr(args, "chain_encoder_layers", 6),
             embedding_dim=d_model,
@@ -134,7 +136,7 @@ class MultiMolModel(nn.Module):
             output_dim=128,
             weight=self.embed_tokens.weight,
         )
-        
+
         self.movement_pred_head = MovementPredictionHead(
             getattr(args, "encoder_embed_dim", 768),
             int(pair_embed_dim),
@@ -247,286 +249,77 @@ class MultiMolModel(nn.Module):
     # ------------------------------------------------------------------
     # forward
     # ------------------------------------------------------------------
-    def forward(self, batch):
-        """Args:
-            batch (dict): see dataloader for full specification
-        Returns:
-            node_repr (Tensor): [B, T, D]
-            pair_repr (Tensor): [B, T, T, D_p]
-        """
+    def _build_chain_only_seg_repr(self, batch):
+        """Initialize graph nodes from monomer identifiers or fixed fingerprints."""
+        seg_valid_mask = batch["seg_valid_mask"]
+        seg_smiles_id = batch.get("seg_smiles_id", None)
+        if seg_smiles_id is None:
+            # Backward-compatible fallback for old preprocessed files.
+            seg_smiles_id = batch["seg_block_id"]
 
-        # Chain-only path intentionally bypasses all stage-1 atom-level computation.
-        if self.args.main_task == "chain_only":
-            seg_valid_mask = batch["seg_valid_mask"]
-            seg_smiles_id = batch.get("seg_smiles_id", None)
-            if seg_smiles_id is None:
-                # Backward-compatible fallback for old preprocessed files.
-                seg_smiles_id = batch["seg_block_id"]
-
-            seg_smiles_id = seg_smiles_id.long()
-            if getattr(self.args, "chain_only_repr", "smiles_embed") == "fp_morgan2048":
-                self._ensure_fp_table()
-                fp_size = int(self.fp_table.size(0))
-                if fp_size <= 0:
-                    raise RuntimeError("fp_table is empty; failed to build fingerprints")
-                seg_smiles_id = torch.remainder(seg_smiles_id, fp_size)
-                seg_fp = self.fp_table[seg_smiles_id]
-                seg_repr = self.fp_proj(seg_fp.to(dtype=self.embed_tokens.weight.dtype))
-            else:
-                vocab_size = int(self.stage2_only_smiles_embed.num_embeddings)
-                seg_smiles_id = torch.remainder(seg_smiles_id, vocab_size)
-                seg_repr = self.stage2_only_smiles_embed(seg_smiles_id)
-            seg_repr = seg_repr * seg_valid_mask.unsqueeze(-1).float()
-            seg_repr = seg_repr.to(dtype=self.embed_tokens.weight.dtype)
-
-            chain_tokens, chain_attn_mask, chain_meta = self.chain_token_feature(
-                seg_repr=seg_repr,
-                seg_dop=batch["seg_dop"],
-                seg_block_id=batch["seg_block_id"],
-                glob_feat=batch["chain_glob_feat"],
-                glob_feat_mask=batch["chain_glob_mask"],
-                block_feat=batch["block_feat"],
-                block_feat_mask=batch["block_feat_mask"],
-                chain_node_seg_id=batch.get("chain_node_seg_id", None),
-                chain_topo_dist=batch.get("chain_topo_dist", None),
-                num_heads=self.args.chain_attention_heads,
-            )
-
-            B3, T, _ = chain_tokens.shape
-            graph_attn_bias = chain_tokens.new_zeros(B3, T, T, self.args.chain_pair_dim)
-            graph_attn_bias = self.chain_edge_feature(
-                batch,
-                graph_attn_bias,
-                repeat_start=int(chain_meta["repeat_start"]),
-                chain_len=chain_meta["chain_len"],
-                topo_dist=chain_meta["topo_dist"],
-            )
-
-            chain_repr, _ = self.chain_encoder(
-                chain_tokens,
-                graph_attn_bias,
-                atom_mask=None,
-                pair_mask=None,
-                attn_mask=chain_attn_mask,
-            )
-
-            chain_cls = chain_repr[:, 0, :]
-            pred = self.reg_head(chain_cls)
-            return pred
-
-        # ---------- unpack -------------------------------------------------
-        atom_mask = batch["atom_mask"]  # [B, N]
-        seg_id = batch["segment_id"]  # [B, N]
-        pos = batch["src_pos"]  # [B, N, 3]
-        pair_type = batch["pair_type"]  # [B, N, N]
-        token_ids = batch["src_token"]  # [B, N]
-
-        B, N = atom_mask.shape
-        n_seg = batch["seg_feat"].size(1)
-        special_len = 2 + n_seg  # CLS + GLOB + SEG
-        total_len = special_len + N
-
-        # ---------- node embedding -----------------------------------------
-        token_feat = self.embed_tokens(token_ids)
-        node_repr = self.atom_feature(batch, token_feat)  # [B, T, D]
-        if node_repr.dtype == torch.float32 and torch.is_autocast_enabled():
-            node_repr = node_repr.to(torch.get_autocast_gpu_dtype())
-
-        # ---------- masks ---------------------------------------------------
-        attn_mask = _build_attn_mask(
-            batch["base_mask"],
-            seg_id,
-            atom_mask,
-            batch["seg_valid_mask"],
-            glob_valid=batch["glob_valid_mask"],
-            num_heads=self.args.encoder_attention_heads,
-        )
-        
-        if not getattr(self.args, "wo_pair", False):
-            attn_mask = _build_attn_mask(
-                batch["base_mask"],
-                seg_id,
-                atom_mask,
-                batch["seg_valid_mask"],
-                glob_valid=batch["glob_valid_mask"],
-                num_heads=self.args.encoder_attention_heads,
-            )
+        seg_smiles_id = seg_smiles_id.long()
+        if getattr(self.args, "chain_only_repr", "smiles_embed") == "fp_morgan2048":
+            self._ensure_fp_table()
+            fp_size = int(self.fp_table.size(0))
+            if fp_size <= 0:
+                raise RuntimeError("fp_table is empty; failed to build fingerprints")
+            seg_smiles_id = torch.remainder(seg_smiles_id, fp_size)
+            seg_fp = self.fp_table[seg_smiles_id]
+            seg_repr = self.fp_proj(seg_fp.to(dtype=self.embed_tokens.weight.dtype))
         else:
-            attn_mask = build_padding_only_attn_mask(
-            atom_mask,
-            batch["seg_valid_mask"],
-            glob_valid=batch["glob_valid_mask"],
-            num_heads=self.args.encoder_attention_heads,
-        )
-
-        # ---------- pair-wise bias -----------------------------------------
-        pair_embed_dim = getattr(self.args, "pair_embed_dim", None)
-        if pair_embed_dim is None:
-            pair_embed_dim = getattr(self.args, "pair_dim", 512)
-
-        pair_repr = node_repr.new_zeros(
-            B, total_len, total_len, int(pair_embed_dim), dtype=node_repr.dtype
-        )
-        pair_repr = self.edge_feature(batch, pair_repr)
-
-        # 3-D SE(3) bias �C inside each segment only
-        if getattr(self.args, "wo_geom_3d", False):
-            pass
-        else:
-            delta_pos = pos.unsqueeze(2) - pos.unsqueeze(1)  # [B, N, N, 3]
-            dist = delta_pos.norm(dim=-1)  # [B, N, N]
-            geom_bias = self.se3_invariant_kernel(dist.detach(), pair_type.long())
-            same_seg = (seg_id.unsqueeze(-1) == seg_id.unsqueeze(-2)).unsqueeze(-1)
-            geom_bias.masked_fill_(~same_seg, 0.0)
-            pair_repr[:, special_len:, special_len:, :].add_(geom_bias)
-                
-        # ---------- padding masks ------------------------------------------
-        cls_mask  = atom_mask.new_ones(B, 1, dtype=torch.bool)
-        glob_mask = batch["glob_valid_mask"].bool()
-        seg_mask  = batch["seg_valid_mask"].bool()
-        node_mask = torch.cat([cls_mask, glob_mask, seg_mask, atom_mask.bool()], dim=1)
-        pair_mask = node_mask.unsqueeze(-1) & node_mask.unsqueeze(-2)
-
-        # ---------- encoder --------------------------------------------------
-        node_repr, pair_repr = self.encoder(
-            node_repr,
-            pair_repr,
-            atom_mask=node_mask,
-            pair_mask=pair_mask,
-            attn_mask=attn_mask,
-        )
-        
-        # ---------- Downstream REG head --------------------------------------------------
-        if self.args.main_task == "finetune":
-            mol_rep = node_repr[:, 0, :]
-            if self.stage1_capacity_mlp is not None:
-                mol_rep = mol_rep + self.stage1_capacity_mlp(mol_rep)
-            pred_val = self.reg_head(mol_rep)
-            return pred_val
-            
-        # ---------- Downstream chain-level forward --------------------------------------------------    
-        elif self.args.main_task == "chain":
-
-            n_seg = batch["seg_feat"].size(1)
-            seg_start = 2                    # CLS + GLOB
-            seg_end = 2 + n_seg
-        
-            seg_repr = node_repr[:, seg_start:seg_end, :]   # [B, S, D]
-
-            chain_tokens, chain_attn_mask, chain_meta = self.chain_token_feature(
-                seg_repr=seg_repr,
-                seg_dop=batch["seg_dop"],
-                seg_block_id=batch["seg_block_id"],
-                glob_feat=batch["chain_glob_feat"],
-                glob_feat_mask=batch["chain_glob_mask"],
-                block_feat=batch["block_feat"],              # [B, 2, F]
-                block_feat_mask=batch["block_feat_mask"],    # [B, 2, F]
-                chain_node_seg_id=batch.get("chain_node_seg_id", None),
-                chain_topo_dist=batch.get("chain_topo_dist", None),
-                num_heads=self.args.chain_attention_heads,
-            )
-            # chain_tokens: [B, T, D]
-            # chain_attn_mask: [B, H, T, T]
-        
-            B, T, _ = chain_tokens.shape
-            graph_attn_bias = chain_tokens.new_zeros(
-                B, T, T, self.args.chain_pair_dim
-            )
-        
-            graph_attn_bias = self.chain_edge_feature(
-                batch,
-                graph_attn_bias,
-                repeat_start=int(chain_meta["repeat_start"]),
-                chain_len=chain_meta["chain_len"],
-                topo_dist=chain_meta["topo_dist"],
-            )
-            # shape: [B, T, T, pair_dim]
-        
-
-            chain_repr, _ = self.chain_encoder(
-                chain_tokens,
-                graph_attn_bias,
-                atom_mask=None,          
-                pair_mask=None,        
-                attn_mask=chain_attn_mask,
-            )
-        
-            chain_cls = chain_repr[:, 0, :]    # CLS token
-            pred = self.reg_head(chain_cls)
-        
-            return pred
-
-        # ---------- Downstream chain-only forward (skip stage-1 monomer encoder) --------
-        elif self.args.main_task == "chain_only":
-
-            seg_valid_mask = batch["seg_valid_mask"]
-            seg_smiles_id = batch.get("seg_smiles_id", None)
-            if seg_smiles_id is None:
-                # Backward-compatible fallback for old preprocessed files.
-                seg_smiles_id = batch["seg_block_id"]
-
-            seg_smiles_id = seg_smiles_id.long()
             vocab_size = int(self.stage2_only_smiles_embed.num_embeddings)
             seg_smiles_id = torch.remainder(seg_smiles_id, vocab_size)
-
             seg_repr = self.stage2_only_smiles_embed(seg_smiles_id)
-            seg_repr = seg_repr * seg_valid_mask.unsqueeze(-1).float()
-            seg_repr = seg_repr.to(dtype=self.embed_tokens.weight.dtype)
+        seg_repr = seg_repr * seg_valid_mask.unsqueeze(-1).float()
+        seg_repr = seg_repr.to(dtype=self.embed_tokens.weight.dtype)
 
-            chain_tokens, chain_attn_mask, chain_meta = self.chain_token_feature(
-                seg_repr=seg_repr,
-                seg_dop=batch["seg_dop"],
-                seg_block_id=batch["seg_block_id"],
-                glob_feat=batch["chain_glob_feat"],
-                glob_feat_mask=batch["chain_glob_mask"],
-                block_feat=batch["block_feat"],
-                block_feat_mask=batch["block_feat_mask"],
-                chain_node_seg_id=batch.get("chain_node_seg_id", None),
-                chain_topo_dist=batch.get("chain_topo_dist", None),
-                num_heads=self.args.chain_attention_heads,
-            )
+        return seg_repr
 
-            B3, T, _ = chain_tokens.shape
-            graph_attn_bias = chain_tokens.new_zeros(B3, T, T, self.args.chain_pair_dim)
-            graph_attn_bias = self.chain_edge_feature(
-                batch,
-                graph_attn_bias,
-                repeat_start=int(chain_meta["repeat_start"]),
-                chain_len=chain_meta["chain_len"],
-                topo_dist=chain_meta["topo_dist"],
-            )
+    def _predict_chain(self, batch, segment_repr):
+        """Apply the supplied polymer graph to learned or identifier segment features."""
+        tokens, attention_mask, metadata = self.chain_token_feature(
+            seg_repr=segment_repr,
+            seg_dop=batch["seg_dop"],
+            seg_block_id=batch["seg_block_id"],
+            glob_feat=batch["chain_glob_feat"],
+            glob_feat_mask=batch["chain_glob_mask"],
+            block_feat=batch["block_feat"],
+            block_feat_mask=batch["block_feat_mask"],
+            chain_node_seg_id=batch.get("chain_node_seg_id", None),
+            chain_topo_dist=batch.get("chain_topo_dist", None),
+            num_heads=self.args.chain_attention_heads,
+        )
+        batch_size, token_count, _ = tokens.shape
+        pair_bias = tokens.new_zeros(batch_size, token_count, token_count, self.args.chain_pair_dim)
+        pair_bias = self.chain_edge_feature(
+            batch, pair_bias, repeat_start=int(metadata["repeat_start"]),
+            chain_len=metadata["chain_len"], topo_dist=metadata["topo_dist"],
+        )
+        representation, _ = self.chain_encoder(
+            tokens, pair_bias, atom_mask=None, pair_mask=None, attn_mask=attention_mask,
+        )
+        return self.reg_head(representation[:, 0, :])
 
-            chain_repr, _ = self.chain_encoder(
-                chain_tokens,
-                graph_attn_bias,
-                atom_mask=None,
-                pair_mask=None,
-                attn_mask=chain_attn_mask,
-            )
+    def forward(self, batch):
+        """Return property logits/values, or atom/coordinate/distance pretraining outputs."""
+        task = self.args.main_task
+        if task == "chain_only":
+            return self._predict_chain(batch, self._build_chain_only_seg_repr(batch))
 
-            chain_cls = chain_repr[:, 0, :]
-            pred = self.reg_head(chain_cls)
-            return pred
-
-            
-        # ---------- Pretrain: Masked-Atom Prediction & Coordinate Reconstruction ---------------
-        elif self.args.main_task == "pretrain":
-        
-            # ---- 3.1 Masked Atom Prediction ----
-            atom_repr = node_repr[:, special_len:, :]
-            logits = self.lm_head(atom_repr)       # [B,N,V] �� predicted token logits for each atom        
-            # ---- 3.2 Coordinate Reconstruction ----
-            delta_pos = pos.unsqueeze(2) - pos.unsqueeze(1)  # [B, N, N, 3]
-            atom_repr = node_repr[:, special_len:, :]        # [B, N, d]
-            pair_repr_a = pair_repr[:, special_len:, special_len:, :]  # [B, N, N, d_p]
-            attn_mask_a = attn_mask[:, :, special_len:, special_len:]  # [B, H, N, N]
-            delta = self.movement_pred_head(
-                atom_repr,                         # [B,N,d] �� node representations
-                pair_repr_a,
-                attn_mask_a,                         # [B,N,N,p] �� pairwise representations
-                delta_pos.detach(),                   # Noisy input coordinates (��pos will be used inside the head)
-            )                                      # Returns ��xyz, shape [B,N,3]        
-            pred_pos = pos + delta    # [B,N,3] �� recovered positions        
-            # ---- 3.3 Distance Prediction ----
-            pred_dist = torch.cdist(pred_pos, pred_pos)        
-            return logits, pred_pos, pred_dist               
+        pair_dim = getattr(self.args, "pair_embed_dim", None)
+        if pair_dim is None:
+            pair_dim = getattr(self.args, "pair_dim", 512)
+        encoded = self._encode_monomers(
+            batch, pair_dim=int(pair_dim),
+            wo_pair=getattr(self.args, "wo_pair", False),
+            wo_geom_3d=getattr(self.args, "wo_geom_3d", False),
+        )
+        if task == "finetune":
+            pooled = encoded.nodes[:, 0, :]
+            if self.stage1_capacity_mlp is not None:
+                pooled = pooled + self.stage1_capacity_mlp(pooled)
+            return self.reg_head(pooled)
+        if task == "chain":
+            return self._predict_chain(batch, encoded.nodes[:, 2:encoded.atom_start, :])
+        if task == "pretrain":
+            return self._reconstruct_atoms(batch, encoded)

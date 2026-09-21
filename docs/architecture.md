@@ -8,12 +8,19 @@
 | Dataset and batch collation | `frpn.linear.data` | `frpn.md.data` |
 | Model implementation | `frpn.linear.models.model` | `frpn.md.models.model` |
 | Training / task selection | `frpn.linear.train` | `frpn.md.train` |
+| CLI arguments | `frpn.linear.config` | `frpn.md.config` |
+| Epoch updates and evaluation | `frpn.linear.engine` | `frpn.md.engine` |
+| Target transforms and selection | `frpn.linear.targets` | `frpn.md.targets` |
 | Held-out checkpoint inference | `frpn.linear.export` (BCDB), `frpn.analysis.homopolymer_figures` (homopolymer) | `frpn.md.export` |
 | Model-specific run settings | `configs/slurm/bcdb/`, `configs/slurm/homopolymer/` | `configs/slurm/md/` |
 
-The linear workflow expands monomer repeat counts into chain tokens, with proportional rescaling above the token budget. The MD workflow consumes `chain_node_seg_id`, `chain_node_types` and `chain_edges`. Their encoders, features and collators remain separate implementations. Both use the identical attention implementation in `frpn.common.attention` and molecular graph construction in `frpn.common.molecular_features`.
+The linear workflow expands monomer repeat counts into chain tokens, with proportional rescaling above the token budget. The MD workflow consumes `chain_node_seg_id`, `chain_node_types` and `chain_edges`. Each family owns its model constructor, token features and collator. Both use the token/pair Transformer in `frpn.common.encoder`, attention and layer primitives in `common`, and molecular graph construction in `frpn.common.molecular_features`.
 
-`train` and `export` import their own family's `data` and `models` modules. Model code imports its feature and encoder modules. The encoders import shared attention. Preprocessors import shared molecular features. Imports are package-qualified, so the two families can coexist without changing `sys.path` or introducing a global `models` package.
+`train` and `export` import their own family's `data` and `models` modules. `common.modeling` implements the shared monomer forward and masked reconstruction using modules owned by each model, preserving parameter names and initialization order. Model constructors and chain prediction retain family-specific inputs, anchors and ablations. The family `models.encoder` modules re-export the shared encoder for existing imports.
+
+`train` selects supervised or monomer pretraining, prepares loaders/output paths and selects checkpoints. `engine` implements the family's supervised update and evaluation protocol. `targets` retains its target selection and forward/inverse transforms. `frpn.training` supplies common argument groups, runtime setup, checkpoint serialization, train-only normalization fitting, and masked-atom/geometry pretraining. Runtime settings are applied when training starts, so importing model or inference code does not configure multiprocessing or suppress process-wide warnings.
+
+The supervised schedulers remain distinct: linear training uses cosine annealing, while MD uses cosine annealing with warm restarts. Supervised training updates on a final partial accumulation group. Monomer pretraining keeps its existing optimizer-step validation cadence and carries incomplete accumulation groups across epochs. Imports are package-qualified, so the two families coexist without modifying `sys.path`.
 
 ## Reproduction flow
 

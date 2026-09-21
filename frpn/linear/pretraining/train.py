@@ -21,6 +21,7 @@ from tqdm import tqdm
 from frpn.linear.data import build_dataloader
 from frpn.linear.train import apply_pkl_metadata_to_args, freeze_for_chain_stage1, load_monomer_pretrained_weights
 from frpn.linear.models.model import MultiMolModel
+from frpn.training.runtime import configure_runtime
 
 
 def parse_args():
@@ -397,6 +398,8 @@ def metric_distance_loss(
     target_dist = target_dist / target_scale
 
     return F.smooth_l1_loss(latent_dist, target_dist)
+
+
 def variance_loss(z: torch.Tensor, target_std: float) -> torch.Tensor:
     if z.size(0) < 2:
         return z.new_tensor(0.0)
@@ -532,6 +535,7 @@ def build_run_dir(args) -> Path:
 
 def main():
     args = parse_args()
+    configure_runtime()
     init_distributed(args)
     set_seed(args.seed + args.rank)
 

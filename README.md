@@ -10,7 +10,8 @@ FRPN connects learned monomer representations with an explicit polymer graph. Th
 
 ```text
 frpn/
-  common/              shared attention and molecular graph features
+  common/              shared encoders, layers, geometry and molecular features
+  training/            runtime, checkpoints, normalization and monomer pretraining
   linear/              BCDB and homopolymer workflows
     models/            monomer encoder, chain model and proportional rescaling
     pretraining/       auxiliary BCDB unsupervised training and evaluation
@@ -25,7 +26,7 @@ scripts/               release verification and manifest maintenance
 tests/                 CPU regression and package integration checks
 ```
 
-BCDB and homopolymers share the `linear` implementation because both construct chains from monomer identities and repeat counts. MD reads the graph supplied in each record and has its own model and data loader. Identical attention and molecular graph utilities live in `common`. Each workflow exposes `preprocess`, `train` and `export` modules without import-path wrappers.
+BCDB and homopolymers share the `linear` implementation because both construct chains from monomer identities and repeat counts. MD reads the graph supplied in each record and has its own model and data loader. Shared model components live in `common`, and shared training services live in `training`. Each workflow exposes `preprocess`, `train` and `export` commands. Its `config`, `engine` and `targets` modules hold arguments, epoch updates/evaluation and target transformations, respectively.
 
 See the [source and entry-point map](docs/architecture.md) for dependencies and the [reproduction guide](docs/reproduce_paper.md) for complete commands. Existing data, results and extracted checkpoint paths are retained.
 
@@ -86,4 +87,4 @@ The released BCDB/homopolymer linear-chain allocator rescales requested monomer 
 
 See [Code and data availability](docs/code_data_availability.md) and [third-party baselines](docs/third_party_baselines.md).
 
-The [reorganization validation record](docs/reorganization.md) documents the checks against the initial release.
+The [reorganization record](docs/reorganization.md) documents the checks against the initial release. The [model and training refactor record](docs/code_quality_refactor.md) describes the shared implementations, targeted fixes and behavior comparisons against the reorganized release.

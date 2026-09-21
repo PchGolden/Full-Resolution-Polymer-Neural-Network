@@ -1,8 +1,6 @@
-# ------------------------------------------------------------------
-# File: attention.py         (drop-in replacement)
-# ------------------------------------------------------------------
+"""Gated attention with optional additive pair bias."""
 import math
-from typing import Optional, List
+from typing import Optional
 
 import torch
 import torch.nn as nn
@@ -37,6 +35,7 @@ def _init_linear(layer: nn.Linear, init_type: str, use_bias: bool = True) -> Non
         _trunc_normal_(layer.weight, scale=1.0)
         if layer.bias is not None and use_bias:
             nn.init.zeros_(layer.bias)
+
 
 class Attention(nn.Module):
     """
@@ -117,12 +116,10 @@ class Attention(nn.Module):
 
         bias = self.linear_bias(pair)                # [B, N, N, H]
         bias = bias.permute(0, 3, 1, 2).contiguous()  # [B, H, N, N]
-        
+
         if mask is not None:
             attn = attn + mask
-        if self.wo_pair:
-            pass
-        else:
+        if not self.wo_pair:
             attn = attn + bias
         attn = F.softmax(attn, dim=-1)
         self.last_attn = attn.detach()
