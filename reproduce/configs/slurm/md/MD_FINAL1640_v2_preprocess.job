@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+# Reuse the released final-1640 folds, then preprocess to split.pkl.
+#
+# Submit:
+#   sbatch reproduce/configs/slurm/md/MD_FINAL1640_v2_preprocess.job
+
+#SBATCH --job-name=MD_FINAL1640_v2_prep
+#SBATCH --partition=cpuXeon6458
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=16
+#SBATCH --mem=64G
+#SBATCH --time=12:00:00
+#SBATCH --output=reproduce/outputs/logs/slurm/MD_FINAL1640_V2/preprocess_%j.out
+#SBATCH --error=reproduce/outputs/logs/slurm/MD_FINAL1640_V2/preprocess_%j.err
+
+# Run from the repository root, or set FRPN_ROOT explicitly.
+FRPN_ROOT="${FRPN_ROOT:-${SLURM_SUBMIT_DIR:-$PWD}}"
+
+set -eo pipefail
+
+cd "${FRPN_ROOT}"
+mkdir -p reproduce/outputs/logs/slurm/MD_FINAL1640_V2
+
+source "$HOME/anaconda3/etc/profile.d/conda.sh"
+conda activate "${FRPN_ENV:-frpn}"
+
+ROOT="${FRPN_ROOT}"
+WITH_FOLD="${ROOT}/datasets/splits/md_final1640_v2/with_fold.csv"
+
+LABELS="density,Rg,D,S_q_peak,nematic_order,dielectric_constant,refractive_index"
+
+python -u -m frpn.md.preprocess \
+  --task finetune \
+  --csv "${WITH_FOLD}" \
+  --outroot "${ROOT}/datasets/processed/MD" \
+  --dataset-name "MD_FINAL1640_V2" \
+  --labels "${LABELS}" \
+  --workers 16 \
+  --kfold 5 \
+  --seed 42 \
+  --fold-source column \
+  --export-splits
+

@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# Summarize HOMO md-style runs after the training array completes.
+#
+# Submit (example):
+#   sbatch --dependency=afterok:<TRAIN_JOBID> --export=ALL,JOBID_MAIN=<TRAIN_JOBID> reproduce/configs/slurm/homopolymer/HOMO_mdstyle_summarize_after.job
+#
+# Outputs:
+#   reproduce/outputs/analysis/homopolymer_mdstyle_summary_<JOBID_MAIN>/
+
+#SBATCH --job-name=HOMO_mdstyle_summary
+#SBATCH --partition=cpuXeon6458
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=8G
+#SBATCH --time=00:30:00
+#SBATCH --output=reproduce/outputs/logs/slurm/HOMO_MDSTYLE/HOMO_summary_%j.out
+#SBATCH --error=reproduce/outputs/logs/slurm/HOMO_MDSTYLE/HOMO_summary_%j.err
+
+# Run from the repository root, or set FRPN_ROOT explicitly.
+FRPN_ROOT="${FRPN_ROOT:-${SLURM_SUBMIT_DIR:-$PWD}}"
+
+set -eo pipefail
+
+cd "${FRPN_ROOT}"
+source ~/.bashrc
+conda activate "${FRPN_ENV:-frpn}"
+cd "${FRPN_ROOT}"
+
+mkdir -p reproduce/outputs/logs/slurm/HOMO_MDSTYLE
+
+JOBID_MAIN="${JOBID_MAIN:-}"
+if [[ -z "${JOBID_MAIN}" ]]; then
+  echo "[ERROR] Missing JOBID_MAIN env var (training array jobid)."
+  exit 2
+fi
+
+OUT_DIR="reproduce/outputs/analysis/homopolymer_mdstyle_summary_${JOBID_MAIN}"
+mkdir -p "${OUT_DIR}"
+
+python -u -m reproduce.evaluate.homopolymer_summary \
+  --log_dir reproduce/outputs/logs/slurm/HOMO_MDSTYLE \
+  --jobid_main "${JOBID_MAIN}" \
+  --out_dir "${OUT_DIR}"
+
+echo "[OK] wrote summary to ${OUT_DIR}"

@@ -2,9 +2,8 @@ __pycache__/
 *.py[cod]
 .venv/
 .DS_Store
-reproduced/
-data/processed/
-results/retrained*/
+reproduce/outputs/
+datasets/processed/
 checkpoints/
 *.pt
 *.pth
@@ -12,7 +11,6 @@ checkpoints/
 build/
 dist/
 .pytest_cache/
-sbatch/sbatch_log/
 slurm-*.out
 .env
 .env.*
